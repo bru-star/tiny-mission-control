@@ -1,0 +1,4 @@
+secrets.h
+*.local.json
+build/
+__pycache__/

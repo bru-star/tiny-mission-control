@@ -54,6 +54,8 @@ Wired this way, none of the wires cross. Go by the labels printed on your board,
 
 ## Firmware
 
+Download this repository with **Code > Download ZIP** and extract it, or clone it with Git. Open a terminal in the extracted repository folder (the one containing this README). Run the commands below from that folder.
+
 Copy `firmware/Houston/secrets.example.h` to `secrets.h` next to it, and fill in your Wi-Fi details and time zone.
 
 - Git ignores `secrets.h`, so your details stay out of the repo.
@@ -61,7 +63,15 @@ Copy `firmware/Houston/secrets.example.h` to `secrets.h` next to it, and fill in
 - There's no setup screen: the details are compiled into the firmware, so a new network or password means flashing again.
 - They're stored unencrypted on the board, so anyone holding it could read them out.
 
-Then, with [arduino-cli](https://arduino.github.io/arduino-cli/) and the ESP32 core installed:
+Install [arduino-cli](https://docs.arduino.cc/arduino-cli/installation/) and the ESP32 core. This project uses the 3.x core APIs; the development environment uses 3.3.11:
+
+```bash
+arduino-cli core update-index --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
+arduino-cli core install esp32:esp32@3.3.11 --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
+arduino-cli lib update-index
+```
+
+Install the libraries:
 
 ```bash
 arduino-cli lib install "Adafruit GFX Library@1.13.0" "Adafruit GC9A01A@1.1.1" "Adafruit BusIO@1.17.4" "ArduinoJson@7.4.3" "NimBLE-Arduino@2.5.2"
@@ -70,6 +80,8 @@ arduino-cli lib install "Adafruit GFX Library@1.13.0" "Adafruit GC9A01A@1.1.1" "
 ```bash
 arduino-cli compile --fqbn esp32:esp32:esp32c6:FlashSize=4M,PartitionScheme=huge_app,CDCOnBoot=cdc firmware/Houston
 ```
+
+Connect the board with a USB data cable. Run `arduino-cli board list` to find its port, then replace `YOUR_PORT` below (for example, `COM5` on Windows).
 
 ```bash
 arduino-cli upload --fqbn esp32:esp32:esp32c6:FlashSize=4M,PartitionScheme=huge_app,CDCOnBoot=cdc --port YOUR_PORT firmware/Houston
@@ -107,6 +119,14 @@ That gathers once and prints the message without sending it. To run it for good,
 .\tools\install_helper.ps1
 ```
 
+The installer creates a separate settings file; it does not copy the configuration you tested in the repository. After installation, copy your tested configuration and restart the helper:
+
+```powershell
+Stop-ScheduledTask -TaskName 'Houston helper'
+Copy-Item .\pc_helper\houston.local.json "$HOME\HoustonHelper\houston.local.json"
+Start-ScheduledTask -TaskName 'Houston helper'
+```
+
 Logs go to `houston_helper.log` in your temp folder.
 
 ### Settings
@@ -134,9 +154,10 @@ GPU load of 50% or more for 20 seconds, ended by under 20% for 60 seconds. A ren
 
 Built and used on one board, with an iPhone and an Nvidia GPU on Windows 11.
 
+The public Houston firmware has been tested successfully on the board by the builder (4 November 2026). The revised printed back cover has also been printed and confirmed to close flush.
+
 Not confirmed yet:
 
-- This public build on a board: it differs from the build in daily use in its names, time zone setting and Bluetooth advert
 - Notifications while the iPhone is on Focus
 - The MAIL lamp with a real email
 - The printer link on a real printer

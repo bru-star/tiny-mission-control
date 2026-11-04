@@ -18,9 +18,12 @@ A source that goes quiet shows `--`, never old numbers.
 
 ## What you need
 
-- ESP32-C6 Super Mini (4 MB flash)
-- 1.28-inch round GC9A01A display module, 240x240, with a BLK pin
-- 8 short wires and a soldering iron
+- **Board:** ESP32-C6 Super Mini with 4 MB flash and USB-C, about 26 x 18 mm (28 mm long with the USB port)
+- **Screen:** 1.28-inch round IPS module with a GC9A01A driver, 240x240, SPI, and 8 pins: GND, VCC, SCL, SDA, RES, DC, CS, BLK. Modules without a BLK pin won't match this wiring.
+- **Wires:** 8 thin wires, about 1.3 mm thick with insulation or less
+- **Tools:** a soldering iron and solder
+- **Power:** a USB-C cable
+- **Case:** PLA filament, about 21 g without a mount (slicer estimate), printed at 0.12 mm layers with 4 walls and no supports
 - An iPhone for the notifications
 - A Windows PC with Python 3.11 or newer for the PC helper, and an Nvidia GPU for the temperature
 
@@ -30,20 +33,33 @@ The printed case and mount are a separate download. A link will follow here.
 
 ## Wiring
 
-| Display pad | ESP32-C6 pin |
-| --- | --- |
-| VCC | 3V3 |
-| GND | GND |
-| SCL | 19 |
-| SDA | 18 |
-| RES | 7 |
-| DC | 6 |
-| CS | 3 |
-| BLK | 2 |
+```text
+SCREEN (GC9A01A)        ESP32-C6 SUPER MINI
+                        Edge A, counted from the USB end
+GND  -----------------  GND   2nd pad
+VCC  -----------------  3V3   3rd pad
+SCL  -----------------  19    5th pad
+SDA  -----------------  18    6th pad
+
+                        Edge B, counted from the USB end
+RES  -----------------  7     10th pad
+DC   -----------------  6     9th pad
+CS   -----------------  3     6th pad
+BLK  -----------------  2     5th pad
+```
+
+Wired this way, none of the wires cross. Go by the labels printed on your board, as the pad positions are only a guide. Keep the wires short, so the case can close flush.
 
 ## Firmware
 
-Copy `firmware/Houston/secrets.example.h` to `secrets.h` next to it, and fill in your Wi-Fi details and time zone. Then, with [arduino-cli](https://arduino.github.io/arduino-cli/) and the ESP32 core installed:
+Copy `firmware/Houston/secrets.example.h` to `secrets.h` next to it, and fill in your Wi-Fi details and time zone.
+
+- Git ignores `secrets.h`, so your details stay out of the repo.
+- The board only joins 2.4 GHz networks.
+- There's no setup screen: the details are compiled into the firmware, so a new network or password means flashing again.
+- They're stored unencrypted on the board, so anyone holding it could read them out.
+
+Then, with [arduino-cli](https://arduino.github.io/arduino-cli/) and the ESP32 core installed:
 
 ```bash
 arduino-cli lib install "Adafruit GFX Library@1.13.0" "Adafruit GC9A01A@1.1.1" "Adafruit BusIO@1.17.4" "ArduinoJson@7.4.3" "NimBLE-Arduino@2.5.2"
@@ -61,7 +77,7 @@ In the Arduino IDE the same settings are: ESP32C6 Dev Module, 4 MB flash, Huge A
 
 ## Pairing the iPhone
 
-iOS doesn't list Houston in Settings > Bluetooth. To pair, connect once from a scanner app such as nRF Connect: Houston asks for pairing as soon as it's connected, so the iPhone shows the prompt. Afterwards it's under My Devices in Settings and reconnects by itself. Notification sharing is the toggle behind its (i) button.
+iOS doesn't list Houston in Settings > Bluetooth. To pair, connect once from a scanner app such as nRF Connect: Houston asks for pairing as soon as it's connected, so the iPhone shows the prompt. There's no passkey to enter, because the board has no buttons: just accept it. Afterwards it's under My Devices in Settings and reconnects by itself. Notification sharing is the toggle behind its (i) button.
 
 Don't pair it with a PC: that connection stops the advertising the iPhone needs.
 

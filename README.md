@@ -18,14 +18,16 @@ A source that goes quiet shows `--`, never old numbers.
 
 ## What you need
 
-- **Board:** ESP32-C6 Super Mini with 4 MB flash and USB-C, about 26 x 18 mm (28 mm long with the USB port)
-- **Screen:** 1.28-inch round IPS module with a GC9A01A driver, 240x240, SPI, and 8 pins: GND, VCC, SCL, SDA, RES, DC, CS, BLK. Modules without a BLK pin won't match this wiring.
+- **Board:** [ESP32-C6 Super Mini](https://www.amazon.es/dp/B0FKH2M99L?tag=tinymission-21) with 4 MB flash and USB-C, about 26 x 18 mm (28 mm long with the USB port)
+- **Screen:** [1.28-inch round IPS module](https://www.amazon.es/dp/B0CFXY1K1T?tag=tinymission-21) with a GC9A01A driver, 240x240, SPI, and 8 pins: GND, VCC, SCL, SDA, RES, DC, CS, BLK. Modules without a BLK pin won't match this wiring.
 - **Wires:** 8 thin wires, about 1.3 mm thick with insulation or less
 - **Tools:** a soldering iron and solder
 - **Power:** a USB-C cable
 - **Case:** PLA filament, about 21 g without a mount (slicer estimate), printed at 0.12 mm layers with 4 walls and no supports
 - An iPhone for the notifications
 - A Windows PC with Python 3.11 or newer for the PC helper, and an Nvidia GPU for the temperature
+
+Links to the exact modules I used. As an Amazon Associate I earn from qualifying purchases. (En calidad de Afiliado de Amazon, obtengo ingresos por las compras adscritas que cumplen los requisitos aplicables.)
 
 The printer, Claude Code and calendar are all optional: leave one out and its lamp shows `--`.
 

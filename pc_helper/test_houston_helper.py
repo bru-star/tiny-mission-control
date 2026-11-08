@@ -11,6 +11,7 @@ import urllib.request
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
+from unittest import mock
 
 import houston_helper as h
 
@@ -40,6 +41,12 @@ class Settings(unittest.TestCase):
         self.assertIsNotNone(h.local_zone({}))
         self.assertEqual(str(h.local_zone({"timezone": "UTC"})), "UTC")
 
+    def test_a_claude_settings_file_that_is_not_utf8_means_no_hooks(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "settings.json"
+            path.write_bytes(b"\xff\xfe{}")
+            self.assertFalse(h.hooks_installed(path))
+
 
 class Game(unittest.TestCase):
     def test_needs_sustained_load_both_ways(self):
@@ -56,6 +63,46 @@ class Game(unittest.TestCase):
         d.update(90, 0)
         d.update(30, 10)  # in between: the wait starts over
         self.assertFalse(d.update(90, 25))
+
+
+class Gpu(unittest.TestCase):
+    NA = "[N/A], [N/A]\n"
+
+    def nvidia_smi(self, *outputs):
+        runs = [SimpleNamespace(stdout=output) for output in outputs]
+        return mock.patch.object(h.subprocess, "run", side_effect=runs)
+
+    def warnings(self):
+        return self.assertLogs("houston_helper", "WARNING")
+
+    def test_reads_whole_numbers(self):
+        with self.nvidia_smi("65, 97\n"):
+            self.assertEqual(h.read_gpu(), (65, 97))
+
+    def test_rounds_decimals_from_newer_drivers(self):
+        with self.nvidia_smi("31.78, 18\n"):
+            self.assertEqual(h.read_gpu(), (32, 18))
+
+    def test_a_decimal_reading_reaches_game_mode(self):
+        detector = h.GameDetector()
+        with self.nvidia_smi("78.42, 97\n", "78.42, 97\n"):
+            self.assertEqual(h.gather_gpu(detector, 0), (78, False))
+            self.assertEqual(h.gather_gpu(detector, 20), (78, True))
+
+    def test_an_unreadable_gpu_is_unknown_and_logged_once(self):
+        detector = h.GameDetector()
+        with self.nvidia_smi(self.NA, self.NA), self.warnings() as logs:
+            self.assertEqual(h.gather_gpu(detector, 0), (-1, False))
+            self.assertEqual(h.gather_gpu(detector, 5), (-1, False))
+        self.assertEqual(len(logs.output), 1)
+
+    def test_logs_again_after_a_recovery(self):
+        detector = h.GameDetector()
+        with self.nvidia_smi(self.NA, "50, 10\n", self.NA), self.warnings() as logs:
+            h.gather_gpu(detector, 0)
+            self.assertEqual(h.gather_gpu(detector, 5), (50, False))
+            h.gather_gpu(detector, 10)
+        self.assertEqual(len(logs.output), 2)
 
 
 class Printing(unittest.TestCase):

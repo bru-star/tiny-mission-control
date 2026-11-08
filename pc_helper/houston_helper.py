@@ -99,6 +99,7 @@ class GameDetector:
 
     def __init__(self):
         self.gaming = False
+        self.unreadable = False
         self.high_since = None
         self.low_since = None
 
@@ -134,7 +135,7 @@ def read_gpu():
         creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
     )
     temperature, load = done.stdout.splitlines()[0].split(",")
-    return int(temperature), int(load)
+    return round(float(temperature)), round(float(load))
 
 
 class PrinterLink:
@@ -327,7 +328,7 @@ class ClaudeTracker:
 def hooks_installed(path=SETTINGS_PATH):
     try:
         return f"127.0.0.1:{HOOK_PORT}" in path.read_text(encoding="utf-8")
-    except OSError:
+    except (OSError, UnicodeDecodeError):
         return False
 
 
@@ -477,10 +478,13 @@ def gather_print(printer):
 def gather_gpu(detector, now):
     try:
         temperature, load = read_gpu()
-        return temperature, detector.update(load, now)
     except Exception as error:
-        log.debug("gpu: %s", type(error).__name__)
+        if not detector.unreadable:  # once per outage, not every 5 s
+            log.warning("gpu: %s", type(error).__name__)
+        detector.unreadable = True
         return -1, False
+    detector.unreadable = False
+    return temperature, detector.update(load, now)
 
 
 def once():
